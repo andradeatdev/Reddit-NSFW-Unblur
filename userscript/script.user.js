@@ -17,231 +17,254 @@
 // ==/UserScript==
 
 const PREFS = {
-    enabled: GM_getValue("autoUnblur", true),
-    nsfw: GM_getValue("unblurNSFW", true),
-    spoiler: GM_getValue("unblurSpoiler", false),
+	enabled: GM_getValue("autoUnblur", true),
+	nsfw: GM_getValue("unblurNSFW", true),
+	spoiler: GM_getValue("unblurSpoiler", false),
 };
 
 const observer = new MutationObserver(repeatedTask);
 observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributeFilter: ["blurred", "reason"],
+	childList: true,
+	subtree: true,
+	attributeFilter: ["blurred", "reason"],
 });
 
 function onceTask() {
-    enableNSFWSearch();
-    handlePopupVisible();
+	enableNSFWSearch();
+	handlePopupVisible();
 }
 onceTask();
 
 function repeatedTask() {
-    removeModal();
-    removeQRNSFW();
-    initToggles();
-    unblurPromo();
+	removeModal();
+	removeQRNSFW();
+	initToggles();
+	unblurPromo();
 
-    if (PREFS.enabled && (PREFS.nsfw || PREFS.spoiler)) {
-        unblurCards();
-        unblurPosts();
-    }
-    if (PREFS.enabled && PREFS.spoiler) unblurTextSpoiler();
+	if (PREFS.enabled && (PREFS.nsfw || PREFS.spoiler)) {
+		unblurCards();
+		unblurPosts();
+	}
+	if (PREFS.enabled && PREFS.spoiler) unblurTextSpoiler();
 }
 repeatedTask();
 
 function removeModal() {
-    const modal = document.querySelector("#blocking-modal");
-    if (modal) modal.remove();
+	const modal = document.querySelector(
+		"#configured-xpromo-blocking_xpromo_nsfw_blocking_desktop",
+	);
+	if (modal) modal.remove();
 
-    const blur = document.querySelector("body > [style*='backdrop-filter']");
-    if (blur) blur.remove();
+	const blur = document.querySelector("body > [style*='backdrop-filter']");
+	if (blur) blur.remove();
 
-    if (document.body && (document.body.style.pointerEvents || document.body.style.overflow)) {
-        document.body.style.removeProperty("overflow");
-        document.body.style.removeProperty("pointer-events");
-    }
+	if (
+		document.body &&
+		(document.body.style.pointerEvents || document.body.style.overflow)
+	) {
+		document.body.style.removeProperty("overflow");
+		document.body.style.removeProperty("pointer-events");
+	}
 }
 
 function removeQRNSFW() {
-    const qr = document.querySelector("#nsfw-qr-dialog");
-    if (qr) qr.remove();
+	const qr = document.querySelector("#nsfw-qr-dialog");
+	if (qr) qr.remove();
 }
 
 function unblurCards() {
-    const highlights = document.querySelectorAll("community-highlight-card[blurred]");
-    for (const highlight of highlights) {
-        const shouldUnblur = (highlight.hasAttribute("nsfw") && PREFS.nsfw) || (highlight.hasAttribute("spoiler") && PREFS.spoiler);
-        if (!shouldUnblur) continue;
+	const highlights = document.querySelectorAll(
+		"community-highlight-card[blurred]",
+	);
+	for (const highlight of highlights) {
+		const shouldUnblur =
+			(highlight.hasAttribute("nsfw") && PREFS.nsfw) ||
+			(highlight.hasAttribute("spoiler") && PREFS.spoiler);
+		if (!shouldUnblur) continue;
 
-        highlight.removeAttribute("blurred");
-    }
+		highlight.removeAttribute("blurred");
+	}
 
-    const thumbs = document.querySelectorAll(
-        ":is(reddit-pdp-right-rail-post, shreddit-post) [data-testid='post-thumbnail'] :is([icon-name='nsfw-fill'], [icon-name='caution-fill'])",
-    );
-    for (const thumb of thumbs) {
-        const type = thumb.getAttribute("icon-name");
-        const shouldUnblur = (type === "nsfw-fill" && PREFS.nsfw) || (type === "caution-fill" && PREFS.spoiler);
+	const thumbs = document.querySelectorAll(
+		":is(reddit-pdp-right-rail-post, shreddit-post) [data-testid='post-thumbnail'] :is([icon-name='nsfw-fill'], [icon-name='caution-fill'])",
+	);
+	for (const thumb of thumbs) {
+		const type = thumb.getAttribute("icon-name");
+		const shouldUnblur =
+			(type === "nsfw-fill" && PREFS.nsfw) ||
+			(type === "caution-fill" && PREFS.spoiler);
 
-        if (!shouldUnblur) continue;
+		if (!shouldUnblur) continue;
 
-        const scrim = thumb.closest(".thumbnail-shadow");
-        const blur = thumb.closest("[data-testid='post-thumbnail']")?.querySelector("img[style*='blur']");
+		const scrim = thumb.closest(".thumbnail-shadow");
+		const blur = thumb
+			.closest("[data-testid='post-thumbnail']")
+			?.querySelector("img[style*='blur']");
 
-        thumb.style.removeProperty("filter");
-        blur.style.removeProperty("filter");
-        scrim.remove();
-    }
+		thumb.style.removeProperty("filter");
+		blur.style.removeProperty("filter");
+		scrim.remove();
+	}
 
-    const medias = document.querySelectorAll("search-telemetry-tracker shreddit-blurred-container");
-    for (const media of medias) {
-        if (media.blurred === false) continue;
+	const medias = document.querySelectorAll(
+		"search-telemetry-tracker shreddit-blurred-container",
+	);
+	for (const media of medias) {
+		if (media.blurred === false) continue;
 
-        const nextElementIsSpoiler = media.nextElementSibling;
+		const nextElementIsSpoiler = media.nextElementSibling;
 
-        if (!nextElementIsSpoiler && PREFS.nsfw) media.blurred = false;
-        if (nextElementIsSpoiler && PREFS.spoiler) {
-            media.blurred = false;
-            nextElementIsSpoiler.remove();
-        }
-    }
+		if (!nextElementIsSpoiler && PREFS.nsfw) media.blurred = false;
+		if (nextElementIsSpoiler && PREFS.spoiler) {
+			media.blurred = false;
+			nextElementIsSpoiler.remove();
+		}
+	}
 
-    const searchThumbs = document.querySelectorAll(`search-telemetry-tracker[data-faceplate-tracking-context*='"type":"thumbnail"']:has(.thumbnail-blur)`);
-    for (const searchThumb of searchThumbs) {
-        const data = searchThumb.getAttribute("data-faceplate-tracking-context");
-        const blur = searchThumb.querySelector(".thumbnail-blur");
+	const searchThumbs = document.querySelectorAll(
+		`search-telemetry-tracker[data-faceplate-tracking-context*='"type":"thumbnail"']:has(.thumbnail-blur)`,
+	);
+	for (const searchThumb of searchThumbs) {
+		const data = searchThumb.getAttribute("data-faceplate-tracking-context");
+		const blur = searchThumb.querySelector(".thumbnail-blur");
 
-        if (data.includes('"nsfw":true') && PREFS.nsfw) blur.classList.remove("thumbnail-blur");
-        if (data.includes('"spoiler":true') && PREFS.spoiler) blur.classList.remove("thumbnail-blur");
-    }
+		if (data.includes('"nsfw":true') && PREFS.nsfw)
+			blur.classList.remove("thumbnail-blur");
+		if (data.includes('"spoiler":true') && PREFS.spoiler)
+			blur.classList.remove("thumbnail-blur");
+	}
 }
 
 function unblurPosts() {
-    const posts = document.querySelectorAll("shreddit-blurred-container[reason]");
-    for (const post of posts) {
-        if (post.blurred === false) continue;
+	const posts = document.querySelectorAll("shreddit-blurred-container[reason]");
+	for (const post of posts) {
+		if (post.blurred === false) continue;
 
-        const reason = post.getAttribute("reason");
-        post.blurred = !PREFS[reason];
-    }
+		const reason = post.getAttribute("reason");
+		post.blurred = !PREFS[reason];
+	}
 }
 
 function unblurTextSpoiler() {
-    const spoilers = document.querySelectorAll("shreddit-spoiler");
-    for (const spoiler of spoilers) {
-        if (spoiler.revealed === true) continue;
-        spoiler.revealed = true;
-    }
+	const spoilers = document.querySelectorAll("shreddit-spoiler");
+	for (const spoiler of spoilers) {
+		if (spoiler.revealed === true) continue;
+		spoiler.revealed = true;
+	}
 }
 
 function unblurPromo() {
-    const promo = document.querySelector("xpromo-nsfw-blocking-container");
-    const prompt = promo?.shadowRoot?.querySelector(".prompt");
-    if (prompt) prompt.remove();
+	const promo = document.querySelector("xpromo-nsfw-blocking-container");
+	const prompt = promo?.shadowRoot?.querySelector(".prompt");
+	if (prompt) prompt.remove();
 
-    const viewInApp = document.querySelector("xpromo-nsfw-blocking-container .viewInApp");
-    if (viewInApp) viewInApp.remove();
+	const viewInApp = document.querySelector(
+		"xpromo-nsfw-blocking-container .viewInApp",
+	);
+	if (viewInApp) viewInApp.remove();
 }
 
 async function enableNSFWSearch() {
-    const over18 = await cookieStore.get("over18");
-    if (over18?.value === "1") return;
+	const over18 = await cookieStore.get("over18");
+	if (over18?.value === "1") return;
 
-    cookieStore.set({
-        name: "over18",
-        value: "1",
-        path: "/",
-        domain: "reddit.com",
-    });
+	cookieStore.set({
+		name: "over18",
+		value: "1",
+		path: "/",
+		domain: "reddit.com",
+	});
 
-    const url = new URL(window.location.href);
-    if (url.pathname === "/search/") window.location.reload();
+	const url = new URL(window.location.href);
+	if (url.pathname === "/search/") window.location.reload();
 }
 
 function handlePopupVisible() {
-    const handler = (e) => {
-        const wrapper = getWrapper();
-        if (!wrapper) return;
+	const handler = (e) => {
+		const wrapper = getWrapper();
+		if (!wrapper) return;
 
-        if (wrapper.classList.contains("open") && !wrapper.contains(e.target)) {
-            wrapper.classList.remove("open");
-        }
-    };
-    document.body.addEventListener("click", handler, true);
+		if (wrapper.classList.contains("open") && !wrapper.contains(e.target)) {
+			wrapper.classList.remove("open");
+		}
+	};
+	document.body.addEventListener("click", handler, true);
 }
 
 function getWrapper() {
-    return document.body.contains(window.wrapper) ? window.wrapper : document.querySelector("#unblur-toggles-wrapper-main");
+	return document.body.contains(window.wrapper)
+		? window.wrapper
+		: document.querySelector("#unblur-toggles-wrapper-main");
 }
 
 function createSecondaryToggle(id, labelText, initialState, onChangeHandler) {
-    const label = document.createElement("label");
-    label.setAttribute("for", id);
+	const label = document.createElement("label");
+	label.setAttribute("for", id);
 
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.name = id;
-    input.id = id;
-    input.checked = initialState;
-    input.addEventListener("change", (e) => onChangeHandler(e.target.checked));
+	const input = document.createElement("input");
+	input.type = "checkbox";
+	input.name = id;
+	input.id = id;
+	input.checked = initialState;
+	input.addEventListener("change", (e) => onChangeHandler(e.target.checked));
 
-    const slider = document.createElement("span");
-    slider.className = "slider";
+	const slider = document.createElement("span");
+	slider.className = "slider";
 
-    const labelSpan = document.createElement("span");
-    labelSpan.className = "slider-label";
-    labelSpan.textContent = labelText;
+	const labelSpan = document.createElement("span");
+	labelSpan.className = "slider-label";
+	labelSpan.textContent = labelText;
 
-    label.appendChild(input);
-    label.appendChild(slider);
-    label.appendChild(labelSpan);
+	label.appendChild(input);
+	label.appendChild(slider);
+	label.appendChild(labelSpan);
 
-    return label;
+	return label;
 }
 
 function updateStatusIndicator(el, isChecked) {
-    el.textContent = isChecked ? "ON" : "OFF";
-    el.className = isChecked ? "on" : "off";
+	el.textContent = isChecked ? "ON" : "OFF";
+	el.className = isChecked ? "on" : "off";
 }
 
 function onMainToggleChange(el, isChecked) {
-    GM_setValue("autoUnblur", isChecked);
-    PREFS.enabled = isChecked;
-    updateStatusIndicator(el, isChecked);
-    repeatedTask();
+	GM_setValue("autoUnblur", isChecked);
+	PREFS.enabled = isChecked;
+	updateStatusIndicator(el, isChecked);
+	repeatedTask();
 }
 
 function onSecondaryToggleChange(key, isChecked) {
-    GM_setValue(key, isChecked);
-    PREFS[key === "unblurNSFW" ? "nsfw" : "spoiler"] = isChecked;
-    repeatedTask();
+	GM_setValue(key, isChecked);
+	PREFS[key === "unblurNSFW" ? "nsfw" : "spoiler"] = isChecked;
+	repeatedTask();
 }
 
 function initToggles() {
-    const wrapperExists = document.querySelector("#unblur-toggles-wrapper-main");
-    if (wrapperExists) return;
+	const wrapperExists = document.querySelector("#unblur-toggles-wrapper-main");
+	if (wrapperExists) return;
 
-    const nav = document.querySelector("header.v2 nav");
-    if (!nav) return;
+	const nav = document.querySelector("header.v2 nav");
+	if (!nav) return;
 
-    const wrapper = document.createElement("div");
-    wrapper.id = "unblur-toggles-wrapper-main";
+	const wrapper = document.createElement("div");
+	wrapper.id = "unblur-toggles-wrapper-main";
 
-    const popupToggle = document.createElement("div");
-    popupToggle.id = "popup-toggle";
-    popupToggle.textContent = "Unblur";
+	const popupToggle = document.createElement("div");
+	popupToggle.id = "popup-toggle";
+	popupToggle.textContent = "Unblur";
 
-    const statusContainer = document.createElement("form");
-    statusContainer.id = "status-container";
+	const statusContainer = document.createElement("form");
+	statusContainer.id = "status-container";
 
-    const statusDiv = document.createElement("div");
-    statusDiv.id = "status";
-    statusContainer.appendChild(statusDiv);
-    updateStatusIndicator(statusDiv, PREFS.enabled);
+	const statusDiv = document.createElement("div");
+	statusDiv.id = "status";
+	statusContainer.appendChild(statusDiv);
+	updateStatusIndicator(statusDiv, PREFS.enabled);
 
-    const containerToggle = document.createElement("div");
-    containerToggle.id = "container-toggle";
-    containerToggle.innerHTML = `
+	const containerToggle = document.createElement("div");
+	containerToggle.id = "container-toggle";
+	containerToggle.innerHTML = `
         <label for="toggle">
             <input id="toggle" name="toggle" type="checkbox" ${PREFS.enabled ? "checked" : ""}>
             <svg viewBox="0 0 24 24">
@@ -249,33 +272,49 @@ function initToggles() {
             </svg>
         </label>
     `;
-    statusContainer.appendChild(containerToggle);
+	statusContainer.appendChild(containerToggle);
 
-    const mainToggleInput = containerToggle.querySelector("#toggle");
-    if (mainToggleInput) {
-        mainToggleInput.addEventListener("change", (e) => onMainToggleChange(statusDiv, e.target.checked));
-    }
+	const mainToggleInput = containerToggle.querySelector("#toggle");
+	if (mainToggleInput) {
+		mainToggleInput.addEventListener("change", (e) =>
+			onMainToggleChange(statusDiv, e.target.checked),
+		);
+	}
 
-    const selectedOps = document.createElement("div");
-    selectedOps.id = "selected-ops";
+	const selectedOps = document.createElement("div");
+	selectedOps.id = "selected-ops";
 
-    const nsfwToggle = createSecondaryToggle("toggle-nsfw", "Unblur NSFW", PREFS.nsfw, (isChecked) => onSecondaryToggleChange("unblurNSFW", isChecked));
-    selectedOps.appendChild(nsfwToggle);
+	const nsfwToggle = createSecondaryToggle(
+		"toggle-nsfw",
+		"Unblur NSFW",
+		PREFS.nsfw,
+		(isChecked) => onSecondaryToggleChange("unblurNSFW", isChecked),
+	);
+	selectedOps.appendChild(nsfwToggle);
 
-    const spoilerToggle = createSecondaryToggle("toggle-spoiler", "Unblur Spoiler", PREFS.spoiler, (isChecked) => onSecondaryToggleChange("unblurSpoiler", isChecked));
-    selectedOps.appendChild(spoilerToggle);
+	const spoilerToggle = createSecondaryToggle(
+		"toggle-spoiler",
+		"Unblur Spoiler",
+		PREFS.spoiler,
+		(isChecked) => onSecondaryToggleChange("unblurSpoiler", isChecked),
+	);
+	selectedOps.appendChild(spoilerToggle);
 
-    statusContainer.appendChild(selectedOps);
+	statusContainer.appendChild(selectedOps);
 
-    wrapper.appendChild(popupToggle);
-    wrapper.appendChild(statusContainer);
+	wrapper.appendChild(popupToggle);
+	wrapper.appendChild(statusContainer);
 
-    wrapper.addEventListener("click", (e) => {
-        if (e.target.id === "unblur-toggles-wrapper-main" || e.target.id === "popup-toggle") wrapper.classList.toggle("open");
-    });
+	wrapper.addEventListener("click", (e) => {
+		if (
+			e.target.id === "unblur-toggles-wrapper-main" ||
+			e.target.id === "popup-toggle"
+		)
+			wrapper.classList.toggle("open");
+	});
 
-    nav.appendChild(wrapper);
-    window.wrapper = wrapper;
+	nav.appendChild(wrapper);
+	window.wrapper = wrapper;
 }
 
 GM_addStyle(`
@@ -286,7 +325,7 @@ GM_addStyle(`
     body[style*='overflow'] {
         overflow: revert !important;
     }
-    #blocking-modal,
+    #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop,
     #nsfw-qr-dialog,
     body > [style*="backdrop-filter"] {
         display: none !important;

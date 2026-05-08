@@ -36,7 +36,9 @@ window.addEventListener("message", (event) => {
 });
 
 function removeModal() {
-	const modal = document.querySelector("#blocking-modal");
+	const modal = document.querySelector(
+		"#configured-xpromo-blocking_xpromo_nsfw_blocking_desktop",
+	);
 	if (modal) modal.remove();
 
 	const blur = document.querySelector("body > [style*='backdrop-filter']");
@@ -169,7 +171,7 @@ const stl = `
     body[style*='overflow'] {
         overflow: revert !important;
     }
-    #blocking-modal,
+    #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop,
     #nsfw-qr-dialog,
     body > [style*="backdrop-filter"] {
         display: none !important;
