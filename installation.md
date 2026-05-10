@@ -1,9 +1,10 @@
-## Chrome Installation
+## Installation
 
-1. Download addon_chrome folder and unzip within empty folder
+### Firefox
 
-2. Enable Developer Mode in Extensions page
+1. Go to [Firefox Addons](https://addons.mozilla.org/pt-BR/firefox/addon/reddit-nsfw-spoiler-unblur/) and click **Add to Firefox**.
 
-3. Click in **LOAD UNPACKED**
+### Userscript
 
-4. Select folder with unziped addon_chrome
+1. Install a userscript manager (Tampermonkey, Violentmonkey, or Firemonkey).
+2. Click on the [Reddit NSFW Unblur](https://greasyfork.org/scripts/485608) link to install the script.

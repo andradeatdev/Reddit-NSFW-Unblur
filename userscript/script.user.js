@@ -8,7 +8,7 @@
 // @grant           GM_addStyle
 // @run-at          document-body
 // @noframes
-// @version         4.5.2
+// @version         4.5.3
 // @icon            https://cdn.jsdelivr.net/gh/zenstorage/Reddit-NSFW-Unblur/assets/icon.png
 // @author          hdyzen
 // @description     Unblur NSFW and Spoiler content on Reddit.
