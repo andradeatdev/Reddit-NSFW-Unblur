@@ -59,7 +59,7 @@ Add to ***My Filters:***
 ! Reddit - Prevent remove revealed
 www.reddit.com##+js(trusted-suppress-native-method, Element.prototype.querySelector, '"div[slot="revealed"]"', prevent)
 ! Reddit - Hide prompt in single post, backdrop overlay, etc...
-www.reddit.com##.prompt, .bg-scrim, .overlay, .viewInApp, #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop, #nsfw-qr-dialog, body > [style*="blur(4px)"]
+www.reddit.com##.prompt, .bg-scrim, .overlay, .viewInApp, #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop, #blocking-modal, #nsfw-qr-dialog, body > [style*="blur(4px)"]
 ! Reddit - Remove scroll/click block
 www.reddit.com##body[style]:remove-attr(style)
 ```

@@ -11,7 +11,7 @@ www.reddit.com#$#override-property-read HTMLElement.prototype.__blurred false
 www.reddit.com#$#prevent-listener track-event nsfw_blur
 
 ! Reddit - Hide prompt in single post, backdrop overlay, etc...
-www.reddit.com##.prompt, .bg-scrim, .overlay, .viewInApp, #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop, #nsfw-qr-dialog, body > [style*="blur(4px)"]
+www.reddit.com##.prompt, .bg-scrim, .overlay, .viewInApp, #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop, #blocking-modal, #nsfw-qr-dialog, body > [style*="blur(4px)"]
 
 ! Reddit - Remove scroll/click block(Instable)
 www.reddit.com#$#override-property-read document.body.style.pointerEvents undefined
