@@ -20,7 +20,6 @@ const observer = new MutationObserver(mutationsHandler);
 
 function init(prefs) {
 	Object.assign(PREFS, prefs);
-	console.log("Prefs", PREFS, "Stored", prefs);
 
 	observer.observe(document.documentElement || document, {
 		childList: true,
@@ -37,7 +36,7 @@ window.addEventListener("message", (event) => {
 
 function removeModal() {
 	const modal = document.querySelector(
-		"#configured-xpromo-blocking_xpromo_nsfw_blocking_desktop",
+		"#configured-xpromo-blocking_xpromo_nsfw_blocking_desktop, #blocking-modal",
 	);
 	if (modal) modal.remove();
 
@@ -162,6 +161,7 @@ async function enableNSFWSearch() {
 	const url = new URL(window.location.href);
 	if (url.pathname === "/search/") window.location.reload();
 }
+enableNSFWSearch();
 
 const stl = `
     /* CSS Modal Fallback */
@@ -178,7 +178,6 @@ const stl = `
     }
 `;
 
-document.documentElement.insertAdjacentHTML(
-	"beforeend",
-	`<style>${stl}</style>`,
-);
+const style = document.createElement("style");
+style.textContent = stl;
+document.documentElement.appendChild(style);

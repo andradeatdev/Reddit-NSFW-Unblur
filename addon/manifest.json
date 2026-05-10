@@ -1,40 +1,56 @@
 {
-	"manifest_version": 3,
-	"name": "Reddit NSFW Unblur",
-	"version": "1.3.6",
-	"description": "Show NSFW images in Reddit (Shreddit, sh.reddit.com)",
-	"icons": {
-		"48": "icons/48.png",
-		"96": "icons/96.png"
-	},
-	"permissions": [
-		"storage"
-	],
-	"host_permissions": [
-		"https://sh.reddit.com/*",
-		"https://www.reddit.com/*"
-	],
-	"action": {
-		"default_icon": "icons/48.png",
-		"default_title": "Reddit NSFW Unblur",
-		"default_popup": "popup/popup.html"
-	},
-	"content_scripts": [
-		{
-			"matches": ["https://www.reddit.com/*", "https://sh.reddit.com/*"],
-			"js": ["content_scripts/exec.js"],
-			"run_at": "document_end"
-		}
-	],
-	"web_accessible_resources": [
-		{
-			"resources": ["content_scripts/injection.js"],
-			"matches": ["https://www.reddit.com/*", "https://sh.reddit.com/*"]
-		}
-	],
-	"browser_specific_settings": {
-		"gecko": {
-			"id": "redditNsfwShow@zen"
-		}
-	}	
+  "manifest_version": 3,
+  "name": "Reddit NSFW Unblur",
+  "version": "1.3.7",
+  "description": "Show NSFW images in Reddit (Shreddit, sh.reddit.com)",
+  "icons": {
+    "48": "icons/48.png",
+    "96": "icons/96.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://sh.reddit.com/*",
+    "https://www.reddit.com/*"
+  ],
+  "action": {
+    "default_icon": "icons/48.png",
+    "default_title": "Reddit NSFW Unblur",
+    "default_popup": "popup/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.reddit.com/*",
+        "https://sh.reddit.com/*"
+      ],
+      "js": [
+        "content_scripts/exec.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content_scripts/injection.js"
+      ],
+      "matches": [
+        "https://www.reddit.com/*",
+        "https://sh.reddit.com/*"
+      ]
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "redditNsfwShow@zen",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ],
+        "optional": []
+      }
+    }
+  }
 }
