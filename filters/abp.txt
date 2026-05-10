@@ -1,8 +1,8 @@
 [Adblock Plus 2.0]
 ! Title: Reddit NSFW Unblock - ABP syntax
 ! Description: Removes NSFW blocking on Reddit - Not autounblur
-! Last modified: 2024-07-07
-! Version: 1.2
+! Last modified: 2026-05-10
+! Version: 1.3
 
 ! Reddit - Set revealed
 www.reddit.com#$#override-property-read HTMLElement.prototype.__blurred false

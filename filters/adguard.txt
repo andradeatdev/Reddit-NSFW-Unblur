@@ -1,7 +1,7 @@
 ! Title: Reddit NSFW Unblock - Adguard syntax
 ! Description: Removes NSFW blocking on Reddit
-! Last modified: 2024-14-07
-! Version: 1.2
+! Last modified: 2026-05-10
+! Version: 1.3
 
 ! Reddit - Set revealed
 www.reddit.com#%#//scriptlet('trusted-set-constant', 'HTMLElement.prototype.__blurred', 'false')    
