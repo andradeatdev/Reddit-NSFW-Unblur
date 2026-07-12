@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Reddit NSFW Unblur",
-  "version": "5.0.4",
+  "version": "5.0.5",
   "description": "Show NSFW images in Reddit (Shreddit, sh.reddit.com)",
   "icons": {
     "48": "icons/48.png",
