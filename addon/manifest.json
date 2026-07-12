@@ -12,7 +12,8 @@
   ],
   "host_permissions": [
     "https://sh.reddit.com/*",
-    "https://www.reddit.com/*"
+    "https://www.reddit.com/*",
+    "https://www.reddittorjg6rue252oqsxryoxengawnmo46qy4kyii5wtqnwfj4ooad.onion/*"
   ],
   "action": {
     "default_icon": "icons/48.png",
@@ -23,7 +24,8 @@
     {
       "matches": [
         "https://www.reddit.com/*",
-        "https://sh.reddit.com/*"
+        "https://sh.reddit.com/*",
+        "https://www.reddittorjg6rue252oqsxryoxengawnmo46qy4kyii5wtqnwfj4ooad.onion/*"
       ],
       "js": [
         "content_scripts/exec.js"
@@ -38,7 +40,8 @@
       ],
       "matches": [
         "https://www.reddit.com/*",
-        "https://sh.reddit.com/*"
+        "https://sh.reddit.com/*",
+        "https://www.reddittorjg6rue252oqsxryoxengawnmo46qy4kyii5wtqnwfj4ooad.onion/*"
       ]
     }
   ],
