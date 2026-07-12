@@ -3,6 +3,7 @@
 // @namespace       https://greasyfork.org/users/821661
 // @match           https://www.reddit.com/*
 // @match           https://sh.reddit.com/*
+// @match           https://www.reddittorjg6rue252oqsxryoxengawnmo46qy4kyii5wtqnwfj4ooad.onion/*
 // @grant           GM_setValue
 // @grant           GM_getValue
 // @grant           GM_addStyle
