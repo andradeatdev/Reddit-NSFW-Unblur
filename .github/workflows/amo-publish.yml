@@ -20,6 +20,9 @@ jobs:
       - name: Install web-ext
         run: npm install -g web-ext
 
+      - name: Lint extension
+        run: web-ext lint -s ./addon
+
       - name: Build and upload to AMO
         run: |
           web-ext sign \
