@@ -27,12 +27,20 @@ jobs:
         run: web-ext lint -s ./addon
 
       - name: Sign and publish to AMO
+        id: amo
+        continue-on-error: true
         run: |
           web-ext sign \
             --source-dir ./addon \
             --api-key "${{ secrets.AMO_JWT_ISSUER }}" \
             --api-secret "${{ secrets.AMO_JWT_SECRET }}" \
             --channel listed
+
+      - name: Check AMO result
+        run: |
+          if [ "${{ steps.amo.outcome }}" = "failure" ]; then
+            echo "::warning::AMO sign failed — version may already exist. Continuing to GitHub Release."
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
