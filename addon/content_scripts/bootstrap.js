@@ -10,7 +10,7 @@ const PREFS = {
 
 function injectScript() {
 	const script = document.createElement("script");
-	script.src = browser.runtime.getURL("content_scripts/injection.js");
+	script.src = browser.runtime.getURL("content_scripts/content.js");
 	(document.head || document.documentElement).appendChild(script);
 	script.onload = () => {
 		script.remove();
