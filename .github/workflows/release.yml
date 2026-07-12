@@ -1,0 +1,40 @@
+name: Publish to AMO and GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install web-ext
+        run: npm install -g web-ext
+
+      - name: Lint extension
+        run: web-ext lint -s ./addon
+
+      - name: Sign and publish to AMO
+        run: |
+          web-ext sign \
+            --source-dir ./addon \
+            --api-key "${{ secrets.AMO_JWT_ISSUER }}" \
+            --api-secret "${{ secrets.AMO_JWT_SECRET }}" \
+            --channel listed
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            web-ext-artifacts/*.xpi
+            userscript/reddit_nsfw_unblur-*.user.js
+          generate_release_notes: true
