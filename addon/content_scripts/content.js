@@ -4,180 +4,129 @@ const PREFS = {
 	spoiler: false,
 };
 
-const mutationsHandler = () => {
-	removeModal();
-	removeQRNSFW();
-	unblurPromo();
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => ctx.querySelectorAll(sel);
 
-	if (PREFS.enabled && (PREFS.nsfw || PREFS.spoiler)) {
-		unblurCards();
-		unblurPosts();
+function removeOverlays() {
+	const selectors = [
+		'#blocking-modal',
+		'#nsfw-qr-dialog',
+		'#configured-xpromo-blocking_xpromo_nsfw_blocking',
+		'#configured-xpromo-blocking_xpromo_nsfw_blocking_desktop',
+		'#configured-xpromo-blocking_xpromo_nsfw_blocking_desktop_cms',
+		"body > [style*='backdrop-filter']",
+	];
+	for (const el of $$(selectors.join(', '))) el.remove();
+
+	const embeds = $$('shreddit-embed');
+	for (const embed of embeds) {
+		if (!embed.mounted && typeof embed.setupEmbed === 'function')
+			embed.setupEmbed();
 	}
-	if (PREFS.enabled && PREFS.spoiler) unblurTextSpoiler();
-};
 
-const observer = new MutationObserver(mutationsHandler);
+	const promo = $('xpromo-nsfw-blocking-container');
+	const prompt = promo?.shadowRoot?.querySelector('.prompt');
+	prompt?.remove();
 
-function init(prefs) {
-	Object.assign(PREFS, prefs);
-
-	observer.observe(document.documentElement || document, {
-		childList: true,
-		subtree: true,
-		attributeFilter: ["blurred", "reason"],
-	});
+	document.body.classList.remove('rpl-scroll-lock');
 }
 
-window.addEventListener("message", (event) => {
-	if (event.source === window && event.data.type === "unblur-prefs") {
-		init(event.data.prefs);
-	}
-});
-
-function removeModal() {
-	const modal = document.querySelector(
-		"#configured-xpromo-blocking_xpromo_nsfw_blocking_desktop, #blocking-modal",
-	);
-	if (modal) modal.remove();
-
-	const blur = document.querySelector("body > [style*='backdrop-filter']");
-	if (blur) blur.remove();
-
-	if (
-		document.body &&
-		(document.body.style.pointerEvents || document.body.style.overflow)
-	) {
-		document.body.style.removeProperty("overflow");
-		document.body.style.removeProperty("pointer-events");
-	}
-}
-
-function removeQRNSFW() {
-	const qr = document.querySelector("#nsfw-qr-dialog");
-	if (qr) qr.remove();
-}
-
-function unblurCards() {
-	const highlights = document.querySelectorAll(
-		"community-highlight-card[blurred]",
-	);
-	for (const highlight of highlights) {
-		if (highlight.hasAttribute("nsfw") && PREFS.nsfw)
-			highlight.removeAttribute("blurred");
-		if (highlight.hasAttribute("spoiler") && PREFS.spoiler)
-			highlight.removeAttribute("blurred");
-	}
-
-	const rights = document.querySelectorAll(
-		"reddit-pdp-right-rail-post [data-testid='post-thumbnail'] [icon-name]",
-	);
-	for (const right of rights) {
-		const type = right.getAttribute("icon-name");
-		const scrim = right.closest(".thumbnail-shadow");
-		const thumb = right.closest("[data-testid='post-thumbnail']");
-		const blur = thumb.querySelector("img[style*='blur']");
-
-		if (type === "nsfw-fill" && PREFS.nsfw) {
-			right.style.removeProperty("filter");
-			blur.style.removeProperty("filter");
-			scrim.remove();
-		}
-		if (type === "caution-fill" && PREFS.spoiler) {
-			right.style.removeProperty("filter");
-			blur.style.removeProperty("filter");
-			scrim.remove();
-		}
-	}
-
-	const medias = document.querySelectorAll(
-		"search-telemetry-tracker shreddit-blurred-container",
-	);
-	for (const media of medias) {
-		const nextElementIsSpoiler = media.nextElementSibling;
-
-		if (!nextElementIsSpoiler && PREFS.nsfw) media.blurred = false;
-		if (nextElementIsSpoiler && PREFS.spoiler) {
-			media.blurred = false;
-			nextElementIsSpoiler.remove();
-		}
-	}
-
-	const searchThumbs = document.querySelectorAll(
-		`search-telemetry-tracker[data-faceplate-tracking-context*='"type":"thumbnail"']:has(.thumbnail-blur)`,
-	);
-	for (const searchThumb of searchThumbs) {
-		const data = searchThumb.getAttribute("data-faceplate-tracking-context");
-		const blur = searchThumb.querySelector(".thumbnail-blur");
-
-		if (data.includes('"nsfw":true') && PREFS.nsfw)
-			blur.classList.remove("thumbnail-blur");
-		if (data.includes('"spoiler":true') && PREFS.spoiler)
-			blur.classList.remove("thumbnail-blur");
-	}
-}
-
-function unblurPosts() {
-	const posts = document.querySelectorAll("shreddit-blurred-container[reason]");
+function removeBlur() {
+	const posts = $$('shreddit-blurred-container[reason][blurred]');
 	for (const post of posts) {
-		if (post.blurred === false) continue;
-
-		const reason = post.getAttribute("reason");
+		const reason = post.getAttribute('reason');
 		post.blurred = !PREFS[reason];
 	}
-}
 
-function unblurTextSpoiler() {
-	const spoilers = document.querySelectorAll("shreddit-spoiler");
-	for (const spoiler of spoilers) {
-		if (spoiler.revealed === true) continue;
-		spoiler.revealed = true;
-	}
-}
-
-function unblurPromo() {
-	const promo = document.querySelector("xpromo-nsfw-blocking-container");
-	if (!promo) return;
-
-	const prompt = promo.shadowRoot.querySelector(".prompt");
-	if (prompt) prompt.remove();
-
-	const viewInApp = document.querySelector(
-		"xpromo-nsfw-blocking-container .viewInApp",
+	const highlights = $$(
+		'community-highlight-card[blurred]:is([nsfw], [spoiler])',
 	);
-	if (viewInApp) viewInApp.remove();
+	for (const hl of highlights) {
+		if (
+			(hl.hasAttribute('nsfw') && PREFS.nsfw) ||
+			(hl.hasAttribute('spoiler') && PREFS.spoiler)
+		) {
+			hl.removeAttribute('blurred');
+		}
+	}
+
+	const thumbs = $$(
+		"reddit-pdp-right-rail-post [data-testid='post-thumbnail']:has([icon-name='nsfw-fill'], [icon-name='caution-fill'])",
+	);
+	for (const t of thumbs) {
+		const svg = $('[icon-name]', t);
+		const type = svg?.getAttribute('icon-name');
+		if (
+			(type === 'nsfw-fill' && PREFS.nsfw) ||
+			(type === 'caution-fill' && PREFS.spoiler)
+		) {
+			$('img', t)?.style.removeProperty('filter');
+			$('.thumbnail-shadow', t)?.remove();
+		}
+	}
+
+	const searchs = $$(
+		`search-telemetry-tracker:is([data-faceplate-tracking-context*='"nsfw":true'], [data-faceplate-tracking-context*='"spoiler":true']):has(.thumbnail-blur)`,
+	);
+	for (const s of searchs) {
+		const ctx = s.getAttribute('data-faceplate-tracking-context');
+		const isNsfw = ctx.includes('"nsfw":true');
+		const isSpoiler = ctx.includes('"spoiler":true');
+		if ((isNsfw && PREFS.nsfw) || (isSpoiler && PREFS.spoiler)) {
+			$('.thumbnail-blur', s)?.classList.remove('thumbnail-blur');
+		}
+	}
+
+	const spoilers = $$('shreddit-spoiler:not([data-revealed])');
+	for (const s of spoilers) {
+		s.dataset.revealed = '';
+		s.revealed = true;
+	}
 }
 
 async function enableNSFWSearch() {
-	const over18 = await cookieStore.get("over18");
-	if (over18?.value === "1") return;
-
-	cookieStore.set({
-		name: "over18",
-		value: "1",
-		path: "/",
-		domain: "reddit.com",
+	const over18 = await cookieStore.get('over18');
+	if (over18?.value === '1') return;
+	await cookieStore.set({
+		name: 'over18',
+		value: '1',
+		path: '/',
+		domain: 'reddit.com',
 	});
-
-	const url = new URL(window.location.href);
-	if (url.pathname === "/search/") window.location.reload();
+	if (new URL(window.location.href).pathname === '/search/')
+		window.location.reload();
 }
-enableNSFWSearch();
+
+function main() {
+	enableNSFWSearch();
+
+	const task = () => {
+		removeOverlays();
+		if (PREFS.enabled) removeBlur();
+	};
+
+	new MutationObserver(task).observe(document.body, {
+		childList: true,
+		subtree: true,
+		attributeFilter: ['blurred', 'reason'],
+	});
+}
+
+window.addEventListener('message', (event) => {
+	if (event.source === window && event.data.type === 'unblur-prefs') {
+		Object.assign(PREFS, event.data.prefs);
+		main();
+	}
+});
 
 const stl = `
-    /* CSS Modal Fallback */
-    body[style*='pointer-events'] {
-        pointer-events: revert !important;
-    }
-    body[style*='overflow'] {
-        overflow: revert !important;
-    }
-    #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop,
-    #nsfw-qr-dialog,
-    body > [style*="backdrop-filter"] {
-        display: none !important;
-    }
+	body[style*='pointer-events'] { pointer-events: revert !important; }
+	body[style*='overflow'] { overflow: revert !important; }
+	#configured-xpromo-blocking_xpromo_nsfw_blocking_desktop,
+	#configured-xpromo-blocking_xpromo_nsfw_blocking_desktop_cms,
+	#nsfw-qr-dialog,
+	body > [style*="backdrop-filter"] { display: none !important; }
 `;
-
-const style = document.createElement("style");
+const style = document.createElement('style');
 style.textContent = stl;
 document.documentElement.appendChild(style);
