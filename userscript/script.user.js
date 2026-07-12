@@ -24,6 +24,9 @@ const PREFS = {
     spoiler: GM_getValue("unblurSpoiler", false),
 };
 
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => ctx.querySelectorAll(sel);
+
 const observer = new MutationObserver(repeatedTask);
 observer.observe(document.body, {
     childList: true,
@@ -37,15 +40,7 @@ function onceTask() {
 onceTask();
 
 function repeatedTask() {
-    removeModal();
-    removeQRNSFW();
-    unblurPromo();
-
-    document.querySelectorAll("shreddit-embed").forEach((embed) => {
-        if (!embed.mounted && typeof embed.setupEmbed === "function") {
-            embed.setupEmbed();
-        }
-    });
+    removeOverlays();
 
     if (document.readyState !== "loading") initToggles();
 
@@ -57,22 +52,29 @@ function repeatedTask() {
 }
 repeatedTask();
 
-function removeModal() {
-    document
-        .querySelectorAll(`
-        #blocking-modal,
-        #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop,
-        #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop_cms,
-        body > [style*='backdrop-filter']
-    `)
-        .forEach((el) => el.remove());
+function removeOverlays() {
+    const overlays = $$(`
+        #blocking-modal, 
+        #nsfw-qr-dialog,
+        #configured-xpromo-blocking_xpromo_nsfw_blocking,
+        body > [style*='backdrop-filter'],
+        #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop, 
+        #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop_cms
+    `);
+    for (const overlay of overlays) {
+        overlay.remove();
+    }
+
+    const embeds = $$("shreddit-embed");
+    for (const embed of embeds) {
+        if (!embed.mounted && typeof embed.setupEmbed === "function") embed.setupEmbed();
+    }
+
+    const promo = $("xpromo-nsfw-blocking-container");
+    const prompt = promo?.shadowRoot?.querySelector(".prompt");
+    prompt?.remove();
 
     document.body.classList.remove("rpl-scroll-lock");
-}
-
-function removeQRNSFW() {
-    const qr = document.querySelector("#nsfw-qr-dialog");
-    if (qr) qr.remove();
 }
 
 function unblurCards() {
@@ -142,15 +144,6 @@ function unblurTextSpoiler() {
         if (spoiler.revealed === true) continue;
         spoiler.revealed = true;
     }
-}
-
-function unblurPromo() {
-    const promo = document.querySelector("xpromo-nsfw-blocking-container");
-    const prompt = promo?.shadowRoot?.querySelector(".prompt");
-    if (prompt) prompt.remove();
-
-    const viewInApp = document.querySelector("xpromo-nsfw-blocking-container .viewInApp");
-    if (viewInApp) viewInApp.remove();
 }
 
 async function enableNSFWSearch() {
@@ -287,7 +280,10 @@ GM_addStyle(`
     }
     #blocking-modal,
     #nsfw-qr-dialog,
-    body > [style*="backdrop-filter"] {
+    #configured-xpromo-blocking_xpromo_nsfw_blocking,
+    body > [style*="backdrop-filter"],
+    #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop,
+    #configured-xpromo-blocking_xpromo_nsfw_blocking_desktop_cms {
         display: none !important;
     }
     #unblur-toggles-wrapper-main {
