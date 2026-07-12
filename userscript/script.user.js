@@ -9,7 +9,7 @@
 // @grant           GM_addStyle
 // @run-at          document-body
 // @noframes
-// @version         5.0.5
+// @version         5.0.6
 // @icon            https://cdn.jsdelivr.net/gh/zenstorage/Reddit-NSFW-Unblur/assets/icon.png
 // @author          hdyzen
 // @description     Unblur nsfw in Shreddit
@@ -511,17 +511,16 @@ GM_addStyle(`
 function main() {
     enableNSFWSearch();
 
-    const repeatedTask = () => {
+    const task = () => {
         if (document.readyState !== "loading") initToggles();
 
         removeOverlays();
-
         if (!PREFS.enabled) return;
         if (PREFS.placeholder) restorePlaceholders();
         removeBlur();
     };
 
-    const observer = new MutationObserver(repeatedTask);
+    const observer = new MutationObserver(task);
     observer.observe(document.body, {
         childList: true,
         subtree: true,
