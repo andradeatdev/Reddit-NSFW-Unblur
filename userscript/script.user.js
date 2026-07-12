@@ -9,7 +9,7 @@
 // @grant           GM_addStyle
 // @run-at          document-body
 // @noframes
-// @version         5.0.2
+// @version         5.0.3
 // @icon            https://cdn.jsdelivr.net/gh/zenstorage/Reddit-NSFW-Unblur/assets/icon.png
 // @author          hdyzen
 // @description     Unblur nsfw in Shreddit
@@ -26,14 +26,6 @@ const PREFS = {
 
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => ctx.querySelectorAll(sel);
-
-function repeatedTask() {
-    removeOverlays();
-
-    if (document.readyState !== "loading") initToggles();
-
-    if (PREFS.enabled) removeBlur();
-}
 
 function removeOverlays() {
     const overlays = $$(`
