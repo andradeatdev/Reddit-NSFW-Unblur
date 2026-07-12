@@ -27,18 +27,6 @@ const PREFS = {
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => ctx.querySelectorAll(sel);
 
-const observer = new MutationObserver(repeatedTask);
-observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributeFilter: ["blurred", "reason"],
-});
-
-function onceTask() {
-    enableNSFWSearch();
-}
-onceTask();
-
 function repeatedTask() {
     removeOverlays();
 
@@ -46,7 +34,6 @@ function repeatedTask() {
 
     if (PREFS.enabled) removeBlur();
 }
-repeatedTask();
 
 function removeOverlays() {
     const overlays = $$(`
@@ -174,13 +161,11 @@ function onMainToggleChange(el, isChecked) {
     GM_setValue("autoUnblur", isChecked);
     PREFS.enabled = isChecked;
     updateStatusIndicator(el, isChecked);
-    repeatedTask();
 }
 
 function onSecondaryToggleChange(key, isChecked) {
     GM_setValue(key, isChecked);
     PREFS[key === "unblurNSFW" ? "nsfw" : "spoiler"] = isChecked;
-    repeatedTask();
 }
 
 function initToggles() {
@@ -196,6 +181,7 @@ function initToggles() {
     const popupToggle = document.createElement("button");
     popupToggle.id = "popup-toggle";
     popupToggle.textContent = "Unblur";
+
     popupToggle.setAttribute("popovertarget", "status-container");
 
     const statusContainer = document.createElement("form");
@@ -245,10 +231,9 @@ function initToggles() {
     });
 
     wrapper.appendChild(popupToggle);
-    wrapper.appendChild(statusContainer);
+    document.body.appendChild(statusContainer);
 
     nav.appendChild(wrapper);
-    window.wrapper = wrapper;
 }
 
 GM_addStyle(`
@@ -422,3 +407,21 @@ GM_addStyle(`
         }
     }
 `);
+
+function main() {
+    enableNSFWSearch();
+
+    const repeatedTask = () => {
+        removeOverlays();
+        if (PREFS.enabled) removeBlur();
+        if (document.readyState !== "loading") initToggles();
+    };
+
+    const observer = new MutationObserver(repeatedTask);
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributeFilter: ["blurred", "reason"],
+    });
+}
+main();
