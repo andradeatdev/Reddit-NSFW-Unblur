@@ -28,7 +28,7 @@
         "https://www.reddittorjg6rue252oqsxryoxengawnmo46qy4kyii5wtqnwfj4ooad.onion/*"
       ],
       "js": [
-        "content_scripts/exec.js"
+        "content_scripts/bootstrap.js"
       ],
       "run_at": "document_end"
     }
@@ -36,7 +36,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "content_scripts/injection.js"
+        "content_scripts/content.js"
       ],
       "matches": [
         "https://www.reddit.com/*",
