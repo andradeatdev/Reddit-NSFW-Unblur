@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "24"
 
       - name: Install web-ext
         run: npm install -g web-ext
@@ -28,7 +28,7 @@ jobs:
 
       - name: Sign and publish to AMO
         id: amo
-        continue-on-error: true
+        continue-on-error: false
         run: |
           web-ext sign \
             --source-dir ./addon \
@@ -36,11 +36,10 @@ jobs:
             --api-secret "${{ secrets.AMO_JWT_SECRET }}" \
             --channel listed
 
-      - name: Check AMO result
+      - name: Build userscript
         run: |
-          if [ "${{ steps.amo.outcome }}" = "failure" ]; then
-            echo "::warning::AMO sign failed — version may already exist. Continuing to GitHub Release."
-          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          cp userscript/script.user.js userscript/reddit_nsfw_unblur-${VERSION}.user.js
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
