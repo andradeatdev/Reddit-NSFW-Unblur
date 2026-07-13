@@ -4,7 +4,20 @@
     </a>
     <h1 align="center">Reddit NSFW Unblur</h1>
     <img width="50%" src="https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/assets/before-addon.png"><img width="50%" src="https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/assets/after-addon.png">
+    <br>
+    <a href="https://addons.mozilla.org/pt-BR/firefox/addon/reddit-nsfw-spoiler-unblur/"><img src="https://img.shields.io/badge/Firefox_Addon-AMO-blue" alt="Firefox Addon"></a>
+    <a href="https://greasyfork.org/scripts/485608"><img src="https://img.shields.io/badge/Userscript-Greasyfork-yellow" alt="Greasyfork"></a>
+    <a href="https://github.com/zenstorage/Reddit-NSFW-Unblur/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License"></a>
 </div>
+
+## Features
+
+- Remove NSFW and spoiler blur on posts, thumbnails, and search results
+- Remove overlay modals (xpromo blocking, scroll lock, backdrop filter)
+- Toggle NSFW / Spoiler / Placeholder independently
+- Placeholder restore: replace Reddit's NSFW placeholder icons with actual subreddit and user avatars
+- .onion support (Tor mirror: `reddittorjg6rue252oqsxryoxengawnmo46qy4kyii5wtqnwfj4ooad.onion`)
+- Available as Firefox addon, userscript, or adblock filter
 
 # Installation
 
@@ -33,22 +46,17 @@ Then install userscript:
 
 [Reddit NSFW Unblur](https://greasyfork.org/scripts/485608)
 
-Alternative Methods
--------------------
+<details>
+<summary><strong>Alternative Methods</strong></summary>
 
 ### Adblock filters (ABP is instable)
 
-##### ⚠️ If you are using uBlock and are using an imported list, add to `trustedListPrefixes` the URL -> `https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/filters/ublock.txt`
+> If you are using uBlock with an imported list, add to `trustedListPrefixes` the URL:  
+> `https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/filters/ublock.txt`
 
 > 1. [uBlock Origin or Brave](https://subscribe.adblockplus.org/?location=https%3A%2F%2Fraw.githubusercontent.com%2Fzenstorage%2FReddit-NSFW-Unblur%2Fmain%2Ffilters%2Fublock.txt&title=Reddit-Unblur)
 > 2. [Adguard](https://subscribe.adblockplus.org/?location=https%3A%2F%2Fraw.githubusercontent.com%2Fzenstorage%2FReddit-NSFW-Unblur%2Fmain%2Ffilters%2Fadguard.txt&title=Reddit-Unblur)  
 > 3. [Adblock Plus (Instable)](https://subscribe.adblockplus.org/?location=https%3A%2F%2Fraw.githubusercontent.com%2Fzenstorage%2FReddit-NSFW-Unblur%2Fmain%2Ffilters%2Fabp.txt&title=Reddit-Unblur)
-
-<!---
-> 1. [uBlock Origin or Brave](https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/filters/ublock.txt)  
-> 2. [Adguard](https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/filters/adguard.txt)  
-> 3. [Adblock Plus (Instable)](https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/filters/abp.txt)
--->
 
 ### uBlock Origin
 
@@ -83,3 +91,24 @@ reddit.com##+js(rub)
 ```
 
 And add the scriptlet to the `User Resources` section in uBlock Origin's advanced settings: `https://cdn.jsdelivr.net/gh/zenstorage/Reddit-NSFW-Unblur/scriptlet/redditUnblock.js`
+
+</details>
+
+# Development
+
+```bash
+# Lint addon
+web-ext lint -s ./addon
+
+# Run addon locally (Firefox only)
+web-ext run -s ./addon
+
+# Build unsigned xpi
+web-ext build -s ./addon -o
+```
+
+Release is automated via GitHub Actions when a version tag (`v*`) is pushed.
+
+# License
+
+[MIT](LICENSE)
