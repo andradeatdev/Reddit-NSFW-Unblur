@@ -9,7 +9,7 @@
 // @grant           GM_addStyle
 // @run-at          document-body
 // @noframes
-// @version         5.0.6
+// @version         5.0.7
 // @icon            https://cdn.jsdelivr.net/gh/zenstorage/Reddit-NSFW-Unblur/assets/icon.png
 // @author          hdyzen
 // @description     Unblur nsfw in Shreddit
@@ -24,88 +24,147 @@ const PREFS = {
     placeholder: GM_getValue("unblurPlaceholder", false),
 };
 
+const SUBREDDIT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="flex items-center rounded-full overflow-hidden nd:visible nd:bg-secondary-background bg-neutral-background border-neutral-background flex items-center justify-center shadow-xs xs:shadow-none w-full h-full" style="color:#ff4500;min-width: 100%;" viewBox="0 0 20 20"><path d="M11.977 13.79h-1.955l4.549-10.715a.81.81 0 0 0-.381-1.032C12.447 1.12 10.37.747 8.179 1.18c-3.612.716-6.471 3.68-7.059 7.316a9.01 9.01 0 0 0 10.409 10.377c3.735-.616 6.741-3.635 7.347-7.371.453-2.8-.388-5.405-2.017-7.322a.505.505 0 0 0-.853.119zM9.98 8.118a1.75 1.75 0 0 0-1.148.167 1.66 1.66 0 0 0-.651.596 1.7 1.7 0 0 0-.258.948v3.96H5.998V6.322h1.876v1.074h.035q.377-.516.948-.851a2.55 2.55 0 0 1 1.311-.335q.258 0 .488.042t.342.09l-.774 1.849a.8.8 0 0 0-.244-.073"></path></svg>`;
+
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => ctx.querySelectorAll(sel);
 
-const $cache = {
-    items: new Map(),
-    queue: [],
-    queueUser: [],
+const cache = {
+    users: new Map(),
+    subreddits: new Map(),
+    collected: new Set(),
     waiting: new Map(),
-    scheduled: false,
 
-    async getThing(id) {
-        if (sessionStorage.getItem(id)) return JSON.parse(sessionStorage.getItem(id));
-        if (this.items.has(id)) return this.items.get(id);
-        if (this.waiting.has(id)) return this.waiting.get(id).promise;
+    async getUser(name) {
+        if (this.users.has(name)) return this.users.get(name);
+        if (this.waiting.has(name)) return this.waiting.get(name);
 
-        let resolve;
-        const promise = new Promise((r) => (resolve = r));
-
-        this.waiting.set(id, { resolve, promise });
-        this.queue.push(id);
-
-        if (!this.scheduled) {
-            this.scheduled = true;
-            queueMicrotask(() => {
-                this.scheduled = false;
-                this.sendThing();
-            });
-        }
-
-        return promise;
-    },
-
-    async sendThing() {
-        if (!this.queue.length) return;
-
-        const ids = this.queue;
-        this.queue = [];
-
-        const res = await fetch(`https://www.reddit.com/api/info.json?raw_json=1&id=${ids.join(",")}`);
-        const { data = [] } = await res.json();
-
-        for (const child of data.children) {
-            const value = {
-                community_icon: child.data.community_icon,
-                banner_background_image: child.data.banner_background_image,
-            };
-
-            this.items.set(child.data.name, value);
-            sessionStorage.setItem(child.data.name, JSON.stringify(value));
-
-            const waiting = this.waiting.get(child.data.name);
-            if (waiting) {
-                this.waiting.delete(child.data.name);
-                waiting.resolve(value);
+        const promise = (async () => {
+            const res = await fetch(`https://www.reddit.com/user/${name}/about.json?raw_json=1`);
+            if (!res.ok) {
+                throw new Error(`Failed to fetch user ${name}:`, res);
             }
-        }
-    },
 
-    async getUser(username) {
-        if (sessionStorage.getItem(username)) return JSON.parse(sessionStorage.getItem(username));
-        if (this.items.has(username)) return this.items.get(username);
-        if (this.waiting.has(username)) return this.waiting.get(username).promise;
+            const { data } = await res.json();
+            const value = { icon: data.icon_img || data.snoovatar_img };
 
-        const promise = this.sendUser(username);
-        this.waiting.set(username, promise);
+            this.users.set(name, value);
+            this.waiting.delete(name);
+
+            return value;
+        })();
+
+        this.waiting.set(name, promise);
 
         try {
             return await promise;
         } finally {
-            this.waiting.delete(username);
+            this.waiting.delete(name);
         }
     },
 
-    async sendUser(username) {
-        const res = await fetch(`https://www.reddit.com/user/${username}/about.json?raw_json=1&show=icon_img`);
-        const { data } = await res.json();
-        const value = { icon_img: data.icon_img || data.snoovatar_img };
+    getSubreddit(name) {
+        if (this.subreddits.has(name)) return this.subreddits.get(name);
+        if (this.waiting.has(name)) return this.waiting.get(name).promise;
 
-        this.items.set(username, value);
-        sessionStorage.setItem(username, JSON.stringify(value));
+        let resolvePromise, rejectPromise;
+        const promise = new Promise((resolve, reject) => {
+            resolvePromise = resolve;
+            rejectPromise = reject;
+        });
 
-        return value;
+        this.waiting.set(name, {
+            promise,
+            resolve: resolvePromise,
+            reject: rejectPromise,
+        });
+
+        setTimeout(() => {
+            const waiting = this.waiting.get(name);
+            if (!waiting) return;
+
+            console.log("timeout on waiting", name);
+            this.waiting.delete(name);
+            waiting.reject();
+        }, 5000);
+
+        return promise;
+    },
+
+    async collectSubreddits() {
+        const ids = new Set();
+
+        const faceplates = $$(`[data-faceplate-tracking-context*='"subreddit":']:not([data-collected])`);
+        for (const faceplate of faceplates) {
+            faceplate.dataset.collected = "";
+
+            const contextAttr = faceplate.dataset.faceplateTrackingContext;
+            const context = JSON.parse(contextAttr);
+
+            const id = context?.subreddit?.id;
+            ids.add(id);
+        }
+
+        const posts = $$("shreddit-post[subreddit-id]:not([data-collected], [subreddit-id=''])");
+        for (const post of posts) {
+            post.dataset.collected = "";
+
+            const id = post.getAttribute("subreddit-id");
+            ids.add(id);
+        }
+
+        const rails = $$(`reddit-pdp-right-rail-post[data-faceplate-tracking-context*='"subreddit_id":']:not([data-collected])`);
+        for (const rail of rails) {
+            rail.dataset.collected = "";
+
+            const contextAttr = rail.dataset.faceplateTrackingContext;
+            const context = JSON.parse(contextAttr);
+
+            const id = context?.post?.subreddit_id;
+            ids.add(id);
+        }
+
+        const unique = [...ids].filter((id) => !this.collected.has(id));
+
+        for (const id of ids) {
+            this.collected.add(id);
+        }
+
+        // console.log("collected in page", unique.length, "subreddits:", unique);
+        // console.log("collected in total", this.collected.size, "subreddits:", this.collected);
+
+        await cache.fetchSubreddits(unique);
+    },
+
+    async fetchSubreddits(ids) {
+        if (!ids.length) return;
+
+        const res = await fetch(`https://www.reddit.com/api/info.json?raw_json=1&id=${ids.join(",")}`, {
+            cache: "force-cache",
+        });
+        if (!res.ok) {
+            console.error("Failed to fetch subreddits", res);
+            return;
+        }
+
+        const listing = await res.json();
+        const childs = listing?.data?.children || [];
+        for (const { data } of childs) {
+            const value = {
+                icon: data.community_icon || data.icon_img,
+            };
+
+            if (data.icon_img) this.users.set(data.display_name.replace("u_", ""), value);
+            this.subreddits.set(data.display_name, value);
+
+            const waiting = this.waiting.get(data.display_name);
+            if (waiting) {
+                this.waiting.delete(data.display_name);
+                waiting.resolve(value);
+            }
+        }
+
+        // console.log("fetched", ids.length, "subreddits:", this.items);
     },
 };
 
@@ -187,73 +246,134 @@ function removeBlur() {
 }
 
 async function restorePlaceholders() {
-    // /search/ | /r/{subreddit}/search/
-    const subreddits = $$(
-        "search-telemetry-tracker:is([view-events='search/view/subreddit'], [click-events='search/click/post'], [click-events='search/click/comment']) img[data-testid='nsfw-subreddit-icon'][src*='avatar_over18.png']:not([data-founded])",
-    );
-    for (const subreddit of subreddits) {
-        subreddit.dataset.founded = "";
+    cache.collectSubreddits();
 
-        const tracker = subreddit.closest("search-telemetry-tracker");
-        if (!tracker) continue;
+    const subAvatarsOver18 = $$(`[data-faceplate-tracking-context*='"subreddit":'] img[src*='avatar_over18.png']:not([data-founded])`);
+    for (const avatar of subAvatarsOver18) {
+        avatar.dataset.founded = "";
 
-        const ctx = JSON.parse(tracker.getAttribute("data-faceplate-tracking-context"));
-        const id = ctx?.subreddit?.id;
-        const { community_icon } = await $cache.getThing(id);
-        if (community_icon) {
-            subreddit.src = community_icon;
-            continue;
-        }
+        const faceplate = avatar.closest("[data-faceplate-tracking-context]");
+        const contextAttr = faceplate.dataset.faceplateTrackingContext;
+        const context = JSON.parse(contextAttr);
+        const name = context?.subreddit?.name;
 
-        subreddit.outerHTML = `<svg rpl="" class="flex items-center shreddit-subreddit-icon__icon rounded-full overflow-hidden nd:visible nd:bg-secondary-background  w-full h-full" fill="currentColor" height="32" icon-name="community-fill" viewBox="0 0 20 20" width="32" xmlns="http://www.w3.org/2000/svg"><path d="M11.977 13.79h-1.955l4.549-10.715a.81.81 0 00-.381-1.032C12.447 1.12 10.37.747 8.179 1.18c-3.612.716-6.471 3.68-7.059 7.316a9.01 9.01 0 0010.409 10.377c3.735-.616 6.741-3.635 7.347-7.371.453-2.8-.388-5.405-2.017-7.322a.505.505 0 00-.853.119l-4.029 9.49zM9.98 8.118a1.752 1.752 0 00-1.148.167 1.664 1.664 0 00-.651.596 1.703 1.703 0 00-.258.948v3.96H5.998V6.322h1.876v1.074h.035c.251-.344.567-.628.948-.851a2.55 2.55 0 011.311-.335c.172 0 .335.014.488.042.153.028.267.058.342.09l-.774 1.849a.766.766 0 00-.244-.073z"></path></svg>`;
+        if (!name) continue;
+
+        (async () => {
+            const data = await cache.getSubreddit(name);
+            if (data?.icon === "") {
+                avatar.outerHTML = SUBREDDIT_SVG;
+                return;
+            }
+
+            if (data?.icon) avatar.src = data.icon;
+        })();
     }
 
-    // /search/ | /r/{subreddit}/search/
-    const users = $$("search-telemetry-tracker[view-events='search/view/people'] img[data-testid='nsfw-subreddit-icon'][src*='avatar_over18.png']:not([data-founded])");
-    for (const user of users) {
-        user.dataset.founded = "";
-
-        const tracker = user.closest("search-telemetry-tracker");
-        if (!tracker) continue;
-
-        const ctx = JSON.parse(tracker.getAttribute("data-faceplate-tracking-context"));
-        const username = ctx?.profile?.name;
-        if (!username) continue;
-
-        const { icon_img } = await $cache.getUser(username);
-        if (icon_img) user.src = icon_img;
-    }
-
-    // /search/?type=comments | /r/{subreddit}/search/?type=comments
-    const comments = $$(
-        "search-telemetry-tracker[view-events='search/view/comment'] [avatar] img[data-testid='nsfw-subreddit-icon'][src*='avatar_over18.png']:not([data-founded])",
-    );
-    for (const comment of comments) {
-        comment.dataset.founded = "";
-
-        const username = comment.closest("a[href]")?.innerText;
-        if (!username) continue;
-
-        const { icon_img } = await $cache.getUser(username);
-        if (icon_img) comment.src = icon_img;
-    }
-
-    // hovercard
-    const icons = $$("faceplate-hovercard svg[icon-name='nsfw-fill']:not([data-founded])");
-    for (const icon of icons) {
+    const subIconsOver18 = $$("faceplate-hovercard[label^='r/'] svg[icon-name='nsfw-fill']:not([data-founded])");
+    for (const icon of subIconsOver18) {
         icon.dataset.founded = "";
 
-        const tracker = icon.closest("search-telemetry-tracker");
-        if (!tracker) continue;
+        const label = icon.closest("faceplate-hovercard");
+        const name = label?.label?.replace("r/", "");
+        if (!name) continue;
 
-        const ctx = JSON.parse(tracker.getAttribute("data-faceplate-tracking-context"));
-        const id = ctx?.subreddit?.id;
-        if (!id) continue;
+        (async () => {
+            const data = await cache.getSubreddit(name);
+            if (data?.icon === "") {
+                icon.outerHTML = SUBREDDIT_SVG;
+                return;
+            }
 
-        const { community_icon } = await $cache.getThing(id);
-        icon.outerHTML = `
-            <img src=${community_icon} class="mb-0 shreddit-subreddit-icon__icon rounded-full overflow-hidden nd:visible nd:bg-secondary-background  w-full h-full" width="48" style="width: 48px;" loading="lazy">
-        `;
+            if (data?.icon)
+                icon.outerHTML = `<img src=${data.icon} class="mb-0 shreddit-subreddit-icon__icon rounded-full overflow-hidden nd:visible nd:bg-secondary-background  w-full h-full" width="48" style="width: 48px;" loading="lazy">`;
+        })();
+    }
+
+    const subIcons = $$("shreddit-post[subreddit-name] svg.avatar[icon-name='nsfw-fill']:not([data-founded])");
+    for (const icon of subIcons) {
+        icon.dataset.founded = "";
+
+        const post = icon.closest("shreddit-post");
+        const name = post?.getAttribute("subreddit-name");
+        if (!name) continue;
+
+        (async () => {
+            const data = await cache.getSubreddit(name);
+            if (data?.icon === "") {
+                icon.outerHTML = SUBREDDIT_SVG;
+                return;
+            }
+
+            if (data?.icon)
+                icon.outerHTML = `<img src=${data.icon} class="mb-0 shreddit-subreddit-icon__icon rounded-full overflow-hidden nd:visible nd:bg-secondary-background  w-full h-full" width="48" style="width: 48px;" loading="lazy">`;
+        })();
+    }
+
+    const userAvatarsOver18 = $$(`[data-faceplate-tracking-context*='"profile":'][view-events="search/view/people"] img[src*='avatar_over18.png']:not([data-founded])`);
+    for (const avatar of userAvatarsOver18) {
+        avatar.dataset.founded = "";
+
+        const faceplate = avatar.closest("[data-faceplate-tracking-context]");
+        const contextAttr = faceplate.dataset.faceplateTrackingContext;
+        const context = JSON.parse(contextAttr);
+        const name = context?.profile?.name;
+        if (!name) continue;
+
+        console.log(name, avatar, cache.users);
+
+        (async () => {
+            const data = await cache.getUser(name);
+            console.log("data", data);
+            if (data?.icon === "") {
+                avatar.outerHTML = SUBREDDIT_SVG;
+                return;
+            }
+
+            if (data?.icon) avatar.src = data.icon;
+        })();
+    }
+
+    const userIconsOver18 = $$("faceplate-hovercard a[href^='/user/'] svg[icon-name='nsfw-fill']:not([data-founded])");
+    for (const icon of userIconsOver18) {
+        icon.dataset.founded = "";
+
+        const link = icon.closest("a[href^='/user/']");
+        const name = link?.href?.split("/").at(-2);
+        if (!name) continue;
+
+        (async () => {
+            const data = await cache.getUser(name);
+            if (data?.icon === "") {
+                icon.outerHTML = SUBREDDIT_SVG;
+                return;
+            }
+
+            if (data?.icon)
+                icon.outerHTML = `<img src=${data.icon} class="mb-0 shreddit-subreddit-icon__icon rounded-full overflow-hidden nd:visible nd:bg-secondary-background  w-full h-full" width="48" style="width: 48px;" loading="lazy">`;
+        })();
+    }
+
+    const userAvatars = $$("shreddit-post[author] img[src*='avatar_default']:not([data-founded])");
+    for (const avatar of userAvatars) {
+        avatar.dataset.founded = "";
+
+        const author = avatar.closest("shreddit-post[author]");
+        const name = author?.getAttribute("author");
+        if (!name) continue;
+
+        console.log(name, avatar, cache.users);
+
+        (async () => {
+            const data = await cache.getUser(name);
+            console.log("data", data, name);
+            if (data?.icon === "") {
+                avatar.outerHTML = SUBREDDIT_SVG;
+                return;
+            }
+
+            if (data?.icon) avatar.src = data.icon;
+        })();
     }
 }
 
@@ -508,15 +628,24 @@ GM_addStyle(`
     }
 `);
 
+function debounce(fn, ms) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), ms);
+    };
+}
+
 function main() {
     enableNSFWSearch();
+    const restorePlaceholdersDebounced = debounce(restorePlaceholders, 10);
 
     const task = () => {
         if (document.readyState !== "loading") initToggles();
 
         removeOverlays();
         if (!PREFS.enabled) return;
-        if (PREFS.placeholder) restorePlaceholders();
+        if (PREFS.placeholder) restorePlaceholdersDebounced();
         removeBlur();
     };
 
