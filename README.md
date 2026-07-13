@@ -1,14 +1,16 @@
-<center align="center">
-    <a align="center" width="100%">
-        <img width="100px" src="https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/assets/icon.png">
-    </a>
-    <h1 align="center">Reddit NSFW Unblur</h1>
-    <img width="50%" src="https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/assets/before-addon.png"><img width="50%" src="https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/assets/after-addon.png">
-    <br>
-    <a href="https://addons.mozilla.org/pt-BR/firefox/addon/reddit-nsfw-spoiler-unblur/"><img src="https://img.shields.io/badge/Firefox_Addon-AMO-blue" alt="Firefox Addon"></a>
-    <a href="https://greasyfork.org/scripts/485608"><img src="https://img.shields.io/badge/Userscript-Greasyfork-yellow" alt="Greasyfork"></a>
-    <a href="https://github.com/zenstorage/Reddit-NSFW-Unblur/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License"></a>
-</center>
+<div align="center">
+    <center>
+        <a align="center" width="100%">
+            <img width="100px" src="https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/assets/icon.png">
+        </a>
+        <h1 align="center">Reddit NSFW Unblur</h1>
+        <img width="50%" src="https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/assets/before-addon.png"><img width="50%" src="https://raw.githubusercontent.com/zenstorage/Reddit-NSFW-Unblur/main/assets/after-addon.png">
+        <br>
+        <a href="https://addons.mozilla.org/pt-BR/firefox/addon/reddit-nsfw-spoiler-unblur/"><img src="https://img.shields.io/badge/Firefox_Addon-AMO-blue" alt="Firefox Addon"></a>
+        <a href="https://greasyfork.org/scripts/485608"><img src="https://img.shields.io/badge/Userscript-Greasyfork-yellow" alt="Greasyfork"></a>
+        <a href="https://github.com/zenstorage/Reddit-NSFW-Unblur/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License"></a>
+    </center>
+</div>
 
 ## Features
 
