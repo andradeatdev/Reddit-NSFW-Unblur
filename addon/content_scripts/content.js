@@ -20,7 +20,7 @@ const $cache = {
         if (this.waiting.has(id)) return this.waiting.get(id).promise;
 
         let resolve;
-        const promise = new Promise((r) => (resolve = r));
+        const promise = new Promise(r => (resolve = r));
 
         this.waiting.set(id, { resolve, promise });
         this.queue.push(id);
@@ -138,7 +138,9 @@ function removeBlur() {
         }
     }
 
-    const searchs = $$(`search-telemetry-tracker:is([data-faceplate-tracking-context*='"nsfw":true'], [data-faceplate-tracking-context*='"spoiler":true']):has(.thumbnail-blur)`);
+    const searchs = $$(
+        `search-telemetry-tracker:is([data-faceplate-tracking-context*='"nsfw":true'], [data-faceplate-tracking-context*='"spoiler":true']):has(.thumbnail-blur)`,
+    );
     for (const s of searchs) {
         const ctx = s.getAttribute("data-faceplate-tracking-context");
         const isNsfw = ctx.includes('"nsfw":true');
@@ -176,7 +178,9 @@ async function restorePlaceholders() {
         subreddit.outerHTML = `<svg rpl="" class="flex items-center shreddit-subreddit-icon__icon rounded-full overflow-hidden nd:visible nd:bg-secondary-background  w-full h-full" fill="currentColor" height="32" icon-name="community-fill" viewBox="0 0 20 20" width="32" xmlns="http://www.w3.org/2000/svg"><path d="M11.977 13.79h-1.955l4.549-10.715a.81.81 0 00-.381-1.032C12.447 1.12 10.37.747 8.179 1.18c-3.612.716-6.471 3.68-7.059 7.316a9.01 9.01 0 0010.409 10.377c3.735-.616 6.741-3.635 7.347-7.371.453-2.8-.388-5.405-2.017-7.322a.505.505 0 00-.853.119l-4.029 9.49zM9.98 8.118a1.752 1.752 0 00-1.148.167 1.664 1.664 0 00-.651.596 1.703 1.703 0 00-.258.948v3.96H5.998V6.322h1.876v1.074h.035c.251-.344.567-.628.948-.851a2.55 2.55 0 011.311-.335c.172 0 .335.014.488.042.153.028.267.058.342.09l-.774 1.849a.766.766 0 00-.244-.073z"></path></svg>`;
     }
 
-    const users = $$("search-telemetry-tracker[view-events='search/view/people'] img[data-testid='nsfw-subreddit-icon'][src*='avatar_over18.png']:not([data-founded])");
+    const users = $$(
+        "search-telemetry-tracker[view-events='search/view/people'] img[data-testid='nsfw-subreddit-icon'][src*='avatar_over18.png']:not([data-founded])",
+    );
     for (const user of users) {
         user.dataset.founded = "";
 
@@ -222,7 +226,7 @@ async function restorePlaceholders() {
 
 async function enableNSFWSearch() {
     const over18 = await cookieStore.get("over18");
-    if (over18?.value === "1") return;
+    if (over18) return;
     await cookieStore.set({
         name: "over18",
         value: "1",
@@ -250,7 +254,7 @@ function main() {
     });
 }
 
-window.addEventListener("message", (event) => {
+window.addEventListener("message", event => {
     if (event.source === window && event.data.type === "unblur-prefs") {
         Object.assign(PREFS, event.data.prefs);
         main();
