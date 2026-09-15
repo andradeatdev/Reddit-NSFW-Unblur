@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "types": ["chrome", "firefox-webext-browser"],
+    "checkJs": false
+  },
+  "include": ["addon", "scriptlet", "userscript"],
+  "exclude": ["node_modules", "dist"]
+}

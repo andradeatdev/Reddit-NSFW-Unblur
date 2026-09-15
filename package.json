@@ -1,6 +1,18 @@
 {
-  "dependencies": {},
+  "name": "reddit-nsfw-unblur",
+  "version": "1.0.0",
+  "description": "Show NSFW images in Reddit (Shreddit, sh.reddit.com)",
   "devDependencies": {
-    "@biomejs/biome": "2.3.11"
+    "@eslint/js": "^10.0.1",
+    "@eslint/json": "^2.1.0",
+    "@eslint/markdown": "^8.0.3",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/chrome": "^0.2.9",
+    "@types/firefox-webext-browser": "^143.0.0",
+    "eslint": "^10.10.0",
+    "eslint-plugin-sonarjs": "^4.2.1",
+    "eslint-plugin-unicorn": "^74.0.0",
+    "globals": "^17.12.0",
+    "web-ext": "^10.6.0"
   }
 }
