@@ -1,8 +1,8 @@
-const toggle = document.getElementById("toggle");
-const toggleNsfw = document.getElementById("toggle-nsfw");
-const toggleSpoiler = document.getElementById("toggle-spoiler");
-const togglePlaceholder = document.getElementById("toggle-placeholder");
-const form = document.getElementById("selected-ops");
+const toggle = document.querySelector("#toggle");
+const toggleNsfw = document.querySelector("#toggle-nsfw");
+const toggleSpoiler = document.querySelector("#toggle-spoiler");
+const togglePlaceholder = document.querySelector("#toggle-placeholder");
+const form = document.querySelector("#selected-ops");
 
 async function loadStoredSettings() {
 	const PREFS = {

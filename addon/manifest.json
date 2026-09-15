@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Reddit NSFW Unblur",
-    "version": "5.0.9",
+    "version": "5.0.10",
     "description": "Show NSFW images in Reddit (Shreddit, sh.reddit.com)",
     "icons": {
         "48": "icons/48.png",
@@ -17,14 +17,14 @@
     "content_scripts": [
         {
             "matches": ["https://www.reddit.com/*", "https://sh.reddit.com/*", "https://www.reddittorjg6rue252oqsxryoxengawnmo46qy4kyii5wtqnwfj4ooad.onion/*"],
-            "js": ["content_scripts/bootstrap.js"],
-            "run_at": "document_start"
-        }
-    ],
-    "web_accessible_resources": [
+            "js": ["js/content.js"],
+            "run_at": "document_start",
+            "world": "MAIN"
+        },
         {
-            "resources": ["content_scripts/content.js"],
-            "matches": ["https://www.reddit.com/*", "https://sh.reddit.com/*", "https://www.reddittorjg6rue252oqsxryoxengawnmo46qy4kyii5wtqnwfj4ooad.onion/*"]
+            "matches": ["https://www.reddit.com/*", "https://sh.reddit.com/*", "https://www.reddittorjg6rue252oqsxryoxengawnmo46qy4kyii5wtqnwfj4ooad.onion/*"],
+            "js": ["js/bridge.js"],
+            "run_at": "document_start"
         }
     ],
     "browser_specific_settings": {
