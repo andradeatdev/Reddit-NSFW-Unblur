@@ -3,5 +3,16 @@
 /addon/web-ext-artifacts
 /addon/build/
 
-# Gemini
-GEMINI.md
+# Package manager (repo uses bun)
+package-lock.json
+
+# IDE
+.vscode
+
+# Build artifacts
+/build
+*.crx
+*.pem
+
+# Output
+/dist

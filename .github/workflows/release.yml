@@ -41,10 +41,31 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           cp userscript/script.user.js userscript/reddit_nsfw_unblur-${VERSION}.user.js
 
+      - name: Prepare Chrome manifest
+        run: |
+          rm -rf build/chrome
+          cp -r addon build/chrome
+          jq '.update_url = "https://github.com/andradeatdev/Reddit-NSFW-Unblur/releases/latest/download/reddit_nsfw_unblur_update.xml"' \
+            addon/manifest.json > build/chrome/manifest.json
+
+      - name: Pack extension zip
+        run: cd build/chrome && zip -qr ../extension.zip .
+
+      - name: Sign CRX and generate update.xml
+        uses: cardinalby/webext-buildtools-chrome-crx-action@v2
+        with:
+          zipFilePath: build/extension.zip
+          crxFilePath: build/chrome/reddit_nsfw_unblur.crx
+          privateKey: ${{ secrets.CRX_PRIVATE_KEY }}
+          updateXmlPath: build/chrome/reddit_nsfw_unblur_update.xml
+          updateXmlCodebaseUrl: https://github.com/andradeatdev/Reddit-NSFW-Unblur/releases/latest/download/reddit_nsfw_unblur.crx
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             web-ext-artifacts/*.xpi
             userscript/reddit_nsfw_unblur-*.user.js
+            build/chrome/reddit_nsfw_unblur.crx
+            build/chrome/reddit_nsfw_unblur_update.xml
           generate_release_notes: true

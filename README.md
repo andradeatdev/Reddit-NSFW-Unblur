@@ -25,9 +25,21 @@
 
 ## Browser Extension
 
-Only for Firefox
+### Firefox
 
 [Firefox Addon](https://addons.mozilla.org/pt-BR/firefox/addon/reddit-nsfw-spoiler-unblur/)
+
+### Brave / Chrome / Edge
+
+Download `reddit_nsfw_unblur.crx` from the [latest GitHub Release](https://github.com/andradeatdev/Reddit-NSFW-Unblur/releases/latest).
+
+> **Windows/macOS**: Chromium browsers block external `.crx` files on restart (anti-malware). If the extension stops being disabled on restart, install via unpacked folder:
+
+1. Extract the source `.zip` from the release (or clone this repo).
+2. Open `brave://extensions` / `chrome://extensions` and enable **Developer mode**.
+3. Click **Load unpacked** and select the `addon/` folder.
+
+> **Linux**: `.crx` is accepted via drag & drop onto `brave://extensions` / `chrome://extensions`.
 
 ## Userscript
 
@@ -95,21 +107,6 @@ reddit.com##+js(rub)
 And add the scriptlet to the `User Resources` section in uBlock Origin's advanced settings: `https://cdn.jsdelivr.net/gh/zenstorage/Reddit-NSFW-Unblur/scriptlet/redditUnblock.js`
 
 </details>
-
-# Development
-
-```bash
-# Lint addon
-web-ext lint -s ./addon
-
-# Run addon locally (Firefox only)
-web-ext run -s ./addon
-
-# Build unsigned xpi
-web-ext build -s ./addon -o
-```
-
-Release is automated via GitHub Actions when a version tag (`v*`) is pushed.
 
 # License
 
