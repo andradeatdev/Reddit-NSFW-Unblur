@@ -9,7 +9,7 @@
 // @grant           GM_addStyle
 // @run-at          document-start
 // @noframes
-// @version         5.0.9
+// @version         5.0.10
 // @icon            https://cdn.jsdelivr.net/gh/zenstorage/Reddit-NSFW-Unblur/assets/icon.png
 // @author          hdyzen
 // @description     Unblur nsfw in Shreddit
@@ -106,7 +106,7 @@ function main() {
         const isNsfw = thisArg.closest(`[click-events="search/click/post"][data-faceplate-tracking-context*='"nsfw":true']`);
         const isSpoiler = thisArg.closest(`[click-events="search/click/post"][data-faceplate-tracking-context*='"spoiler":true']`);
 
-        if ((isNsfw && CONFIG.nsfw.value) || (isSpoiler && CONFIG.spoiler.value)) thisArg.classList.remove("thumbnail-blur");
+        if (isNsfw && CONFIG.nsfw.value || isSpoiler && CONFIG.spoiler.value) thisArg.classList.remove("thumbnail-blur");
 
         return Reflect.apply(target, thisArg, argArray);
     });
@@ -117,8 +117,8 @@ function main() {
         const isSpoiler = thisArg.querySelector("[icon-name='caution-fill']");
         const isNsfw = thisArg.querySelector("[icon-name='nsfw-fill']");
 
-        if ((isNsfw && CONFIG.nsfw.value) || (isSpoiler && CONFIG.spoiler.value)) {
-            const img = thisArg.querySelector('[data-testid="post-thumbnail"] img');
+        if (isNsfw && CONFIG.nsfw.value || isSpoiler && CONFIG.spoiler.value) {
+            const img = thisArg.querySelector("[data-testid=\"post-thumbnail\"] img");
 
             img?.removeAttribute("style");
             thisArg.querySelector(".thumbnail-shadow")?.remove();
@@ -150,8 +150,8 @@ async function enableNSFWSearch() {
         domain: "reddit.com",
     });
 
-    const url = new URL(window.location.href);
-    if (url.pathname === "/search/") window.location.reload();
+    const url = new URL(location.href);
+    if (url.pathname === "/search/") location.reload();
 }
 
 function createRNUTrigger() {
@@ -172,20 +172,20 @@ function createRNUMenu() {
         const p = document.createElement("p");
         h1.textContent = optionName;
         p.textContent = CONFIG[name].description;
-        div.appendChild(h1);
-        div.appendChild(p);
-        label.appendChild(div);
+        div.append(h1);
+        div.append(p);
+        label.append(div);
 
         const input = document.createElement("input");
         input.hidden = true;
         input.type = "checkbox";
         input.name = name;
         input.checked = checked;
-        label.appendChild(input);
+        label.append(input);
 
         const slider = document.createElement("span");
         slider.name = name;
-        label.appendChild(slider);
+        label.append(slider);
 
         return label;
     };
@@ -196,17 +196,17 @@ function createRNUMenu() {
 
     for (const key in CONFIG) {
         const item = createItem(CONFIG[key].name, key, CONFIG[key].value);
-        rnuMenu.appendChild(item);
+        rnuMenu.append(item);
     }
 
     rnuMenu.addEventListener("input", e => {
         if (!e.target.name) return;
 
-        const name = e.target.name;
+        const { name } = e.target;
         CONFIG[name].value = e.target.checked;
         GM_setValue(name, e.target.checked);
 
-        window.location.reload();
+        location.reload();
     });
 
     return rnuMenu;
