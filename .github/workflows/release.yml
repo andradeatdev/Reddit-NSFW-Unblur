@@ -43,8 +43,8 @@ jobs:
 
       - name: Prepare Chrome manifest
         run: |
-          rm -rf build/chrome
-          cp -r addon build/chrome
+          mkdir -p build/chrome
+          cp -r addon/. build/chrome/
           jq '.update_url = "https://github.com/andradeatdev/Reddit-NSFW-Unblur/releases/latest/download/reddit_nsfw_unblur_update.xml"' \
             addon/manifest.json > build/chrome/manifest.json
 

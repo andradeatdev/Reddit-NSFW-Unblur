@@ -9,7 +9,7 @@
 // @grant           GM_addStyle
 // @run-at          document-start
 // @noframes
-// @version         5.0.10
+// @version         5.0.11
 // @icon            https://cdn.jsdelivr.net/gh/zenstorage/Reddit-NSFW-Unblur/assets/icon.png
 // @author          hdyzen
 // @description     Unblur nsfw in Shreddit
